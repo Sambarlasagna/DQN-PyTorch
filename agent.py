@@ -20,7 +20,12 @@ class Agent:
         self.mini_batch_size    = hyperparameters['mini_batch_size']        # size of the training data set sampled from the replay memory
         self.epsilon_init       = hyperparameters['epsilon_init']           # 1 = 100% random actions
         self.epsilon_decay      = hyperparameters['epsilon_decay']          # epsilon decay rate
-        self.epsilon_min        = hyperparameters['epsilon_min']            # minimum epsilon value
+        self.epsilon_min        = hyperparameters['epsilon_min'] 
+        self.learning_rate_a     = hyperparameters['learning_rate_a']        # learning rate for the Adam optimizer
+        self.discount_factor_g   = hyperparameters['discount_factor_g']      # discount factor for future rewards
+
+        self.loss_fn = nn.MSELoss()
+        self.optimizer = None           # minimum epsilon value
 
 
     def run(self, is_training=True, render=False):
@@ -39,6 +44,13 @@ class Agent:
             memory = ReplayMemory(self.replay_memory_size)
 
             epsilon = self.epsilon_init
+
+            target_dqn = DQN(num_states,num_actions).to(device)
+            target_dqn.load_state_dict(policy_dqn.state_dict())
+
+            step_count = 0
+
+            self.optimizer = torch.optim.Adam(policy_dqn.parameters(),lr = self.learning_rate_a)
 
         for episode in itertools.count():
             state, _ = env.reset()
@@ -66,12 +78,37 @@ class Agent:
                 if is_training:
                     memory.append((state, action, reward, terminated))
 
+                    step_count += 1
                 state = new_state
 
             rewards_per_episode.append(episode_reward)
 
             epsilon = max(epsilon*self.epsilon_decay,self.epsilon_min) 
             epsilon_history.append(epsilon)
+
+            if len(memory)>self.mini_batch_size:
+
+                mini_batch = memory.sample(self.mini_batch_size)
+
+                self.optimizer(mini_batch,policy_dqn,target_dqn)
+
+                if step_count>self.network_sync_rate:
+                    target_dqn.load_state_dict(policy_dqn.state_dict())
+                    step_count = 0
+    def optimize(self,mini_batch,policy_dqn,target_dqn):
+        for state, action,new_state, reward, terminated in mini_batch:
+            if terminated:
+                target = reward
+            else:
+                with torch.no_grad():
+                    target = reward + self.discount_factor_g*target_dqn(new_state).max()
+            current_q = policy_dqn(state)
+
+            loss = self.loss_fn(current_q,target)
+
+            self.optimize 
+            loss.backward()
+            self.optimizer.step()
 if __name__ == '__main__':
     agent = Agent('cartpole1')
     agent.run(is_training=True, render=True)
