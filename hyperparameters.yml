@@ -10,7 +10,7 @@ cartpole1:
   discount_factor_g: 0.99
   stop_on_reward: 100000
   fc1_nodes: 128
-  enable_double_dqn: False
+  enable_double_dqn: True
   enable_dueling_dqn: True
 flappybird1:
   env_id: FlappyBird-v0

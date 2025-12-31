@@ -59,11 +59,10 @@ class Agent():
         self.enable_double_dqn  = hyperparameters['enable_double_dqn']      # double dqn on/off flag
         self.enable_dueling_dqn = hyperparameters['enable_dueling_dqn']     # dueling dqn on/off flag
 
-        # Neural Network
-        self.loss_fn = nn.MSELoss()          # NN Loss function. MSE=Mean Squared Error can be swapped to something else.
-        self.optimizer = None                # NN Optimizer. Initialize later.
 
-        # Path to Run info
+        self.loss_fn = nn.MSELoss()          
+        self.optimizer = None                
+
         self.LOG_FILE   = os.path.join(RUNS_DIR, f'{self.hyperparameter_set}.log')
         self.MODEL_FILE = os.path.join(RUNS_DIR, f'{self.hyperparameter_set}.pt')
         self.GRAPH_FILE = os.path.join(RUNS_DIR, f'{self.hyperparameter_set}.png')
@@ -78,24 +77,21 @@ class Agent():
             with open(self.LOG_FILE, 'w') as file:
                 file.write(log_message + '\n')
 
-        # Create instance of the environment.
-        # Use "**self.env_make_params" to pass in environment-specific parameters from hyperparameters.yml.
         env = gym.make(self.env_id, render_mode='human' if render else None, **self.env_make_params)
 
-        # Number of possible actions
         num_actions = env.action_space.n
 
-        # Get observation space size
-        num_states = env.observation_space.shape[0] # Expecting type: Box(low, high, (shape0,), float64)
 
-        # List to keep track of rewards collected per episode.
+        num_states = env.observation_space.shape[0] 
+
+
         rewards_per_episode = []
 
-        # Create policy and target network. Number of nodes in the hidden layer can be adjusted.
+
         policy_dqn = DQN(num_states, num_actions, self.fc1_nodes, self.enable_dueling_dqn).to(device)
 
         if is_training:
-            # Initialize epsilon
+
             epsilon = self.epsilon_init
 
             # Initialize replay memory
