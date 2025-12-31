@@ -120,10 +120,15 @@ Run the trained agent (evaluation)
 DQN-PyTorch/
 │
 ├── agent.py                # Agent logic (training + evaluation)
+
 ├── dqn.py                  # Q-network definition
+
 ├── experience_replay.py    # Replay memory
+
 ├── hyperparameters.yml     # Training configs
+
 ├── runs/                   # Saved models, logs, plots
+
 └── README.md
 
 # 🎯 Learning Outcomes
